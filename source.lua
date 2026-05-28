@@ -443,10 +443,15 @@ local function doSave()
         end
     end)
 
+    -- Auto-detect saveinstance function
+    local saveFn = (type(saveinstance) == "function" and saveinstance)
+               or (type(synsaveinstance) == "function" and synsaveinstance)
+               or (type(syn) == "table" and type(syn.saveinstance) == "function" and syn.saveinstance)
+
     setStatus("Calling saveinstance...", Color3.fromRGB(100, 200, 255))
 
-    if type(saveinstance) == "function" then
-        local ok, err = pcall(saveinstance, {
+    if saveFn then
+        local ok, err = pcall(saveFn, {
             SaveTerrain = saveOpts.SaveTerrain,
             StreamOnly = saveOpts.StreamOnly,
             Scripts = saveOpts.Scripts,
@@ -463,7 +468,7 @@ local function doSave()
             setStatus("Error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
         end
     else
-        setStatus("saveinstance not found in this executor", Color3.fromRGB(255, 80, 80))
+        setStatus("saveinstance/synsaveinstance not found", Color3.fromRGB(255, 80, 80))
     end
 end
 
