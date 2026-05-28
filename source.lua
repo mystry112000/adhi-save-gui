@@ -26,7 +26,7 @@ local parent = (type(syn) == "table" and type(syn.protect_gui) == "function" and
             or game:GetService("CoreGui")
 gui.Parent = parent
 
-local W, H = 380, 540
+local W, H = 380, 560
 
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, W, 0, H)
@@ -223,10 +223,52 @@ opts.RemoveCollision = makeToggle(optFrame, yy, "Remove Collision", "Skip collis
 
 optFrame.CanvasSize = UDim2.new(0, 0, 0, yy + 6)
 
+local yy2 = 370
+
+-- Function name input
+local fnFrame = Instance.new("Frame")
+fnFrame.Size = UDim2.new(1, -16, 0, 32)
+fnFrame.Position = UDim2.new(0, 8, 0, yy2)
+fnFrame.BackgroundColor3 = BG_CARD
+fnFrame.BorderSizePixel = 0
+fnFrame.Parent = main
+
+local fnc = Instance.new("UICorner")
+fnc.CornerRadius = UDim.new(0, 8)
+fnc.Parent = fnFrame
+
+local fnlabel = Instance.new("TextLabel")
+fnlabel.Size = UDim2.new(0, 50, 1, 0)
+fnlabel.Position = UDim2.new(0, 10, 0, 0)
+fnlabel.BackgroundTransparency = 1
+fnlabel.Text = "Fn:"
+fnlabel.TextColor3 = TEXT_MAIN
+fnlabel.TextSize = 12
+fnlabel.Font = Enum.Font.GothamSemibold
+fnlabel.Parent = fnFrame
+
+local fnInput = Instance.new("TextBox")
+fnInput.Size = UDim2.new(0, 280, 0, 22)
+fnInput.Position = UDim2.new(0, 45, 0, 5)
+fnInput.BackgroundColor3 = BG_DARK
+fnInput.BorderSizePixel = 0
+fnInput.Text = "saveinstance"
+fnInput.TextColor3 = TEXT_MAIN
+fnInput.TextSize = 11
+fnInput.Font = Enum.Font.Gotham
+fnInput.PlaceholderText = "function name"
+fnInput.PlaceholderColor3 = TEXT_DIM
+fnInput.ClearTextOnFocus = false
+fnInput.Parent = fnFrame
+
+local fnc2 = Instance.new("UICorner")
+fnc2.CornerRadius = UDim.new(0, 6)
+fnc2.Parent = fnInput
+
 -- File name input
 local fiFrame = Instance.new("Frame")
-fiFrame.Size = UDim2.new(1, -16, 0, 40)
-fiFrame.Position = UDim2.new(0, 8, 0, 370)
+fiFrame.Size = UDim2.new(1, -16, 0, 32)
+fiFrame.Position = UDim2.new(0, 8, 0, yy2 + 36)
 fiFrame.BackgroundColor3 = BG_CARD
 fiFrame.BorderSizePixel = 0
 fiFrame.Parent = main
@@ -237,22 +279,22 @@ fic.Parent = fiFrame
 
 local filabel = Instance.new("TextLabel")
 filabel.Size = UDim2.new(0, 50, 1, 0)
-filabel.Position = UDim2.new(0, 12, 0, 0)
+filabel.Position = UDim2.new(0, 10, 0, 0)
 filabel.BackgroundTransparency = 1
 filabel.Text = "File:"
 filabel.TextColor3 = TEXT_MAIN
-filabel.TextSize = 13
+filabel.TextSize = 12
 filabel.Font = Enum.Font.GothamSemibold
 filabel.Parent = fiFrame
 
 local fileInput = Instance.new("TextBox")
-fileInput.Size = UDim2.new(0, 270, 0, 28)
-fileInput.Position = UDim2.new(0, 55, 0, 6)
+fileInput.Size = UDim2.new(0, 280, 0, 22)
+fileInput.Position = UDim2.new(0, 45, 0, 5)
 fileInput.BackgroundColor3 = BG_DARK
 fileInput.BorderSizePixel = 0
 fileInput.Text = "SavedMap.rbxmx"
 fileInput.TextColor3 = TEXT_MAIN
-fileInput.TextSize = 12
+fileInput.TextSize = 11
 fileInput.Font = Enum.Font.Gotham
 fileInput.PlaceholderText = "filename.rbxmx"
 fileInput.PlaceholderColor3 = TEXT_DIM
@@ -266,7 +308,7 @@ fic2.Parent = fileInput
 -- Status bar
 local stFrame = Instance.new("Frame")
 stFrame.Size = UDim2.new(1, -16, 0, 50)
-stFrame.Position = UDim2.new(0, 8, 0, 416)
+stFrame.Position = UDim2.new(0, 8, 0, 444)
 stFrame.BackgroundColor3 = BG_CARD
 stFrame.BorderSizePixel = 0
 stFrame.Parent = main
@@ -307,7 +349,7 @@ end
 -- Start button
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -16, 0, 44)
-startBtn.Position = UDim2.new(0, 8, 0, 472)
+startBtn.Position = UDim2.new(0, 8, 0, 500)
 startBtn.BackgroundColor3 = ACCENT
 startBtn.Text = "▶  START SAVING"
 startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -443,12 +485,16 @@ local function doSave()
         end
     end)
 
-    setStatus("Calling saveinstance...", Color3.fromRGB(100, 200, 255))
+    local fnName = fnInput.Text
+    if fnName == "" then fnName = "saveinstance" end
+    local fn = _G[fnName]
 
-    local fn = saveinstance or synsaveinstance
-    if not fn then fn = _G.saveinstance or _G.synsaveinstance end
-    if not fn and type(syn) == "table" then fn = syn.saveinstance end
-    if not fn then fn = function() error("No save function available in this executor") end end
+    if not fn then
+        setStatus("Function '" .. fnName .. "' not found in _G", Color3.fromRGB(255, 80, 80))
+        return
+    end
+
+    setStatus("Calling " .. fnName .. "...", Color3.fromRGB(100, 200, 255))
 
     local ok, err = pcall(fn, {
         SaveTerrain = saveOpts.SaveTerrain,
