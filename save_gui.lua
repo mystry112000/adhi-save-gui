@@ -411,7 +411,11 @@ local function doSave()
         NilInstances = opts.NilInstances(),
         RemovePlayerCharacters = opts.RemovePlayers(),
         ShowStatus = false,
-        Decompile = opts.Scripts()
+        Decompile = opts.Scripts(),
+        IgnoreSpecialProperties = true,
+        TreatUnionsAsParts = true,
+        IgnoreSharedStrings = true,
+        AlternativeWritefile = true
     })
 
     if ok then
