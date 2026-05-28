@@ -443,32 +443,28 @@ local function doSave()
         end
     end)
 
-    -- Auto-detect saveinstance function
-    local saveFn = (type(saveinstance) == "function" and saveinstance)
-               or (type(synsaveinstance) == "function" and synsaveinstance)
-               or (type(syn) == "table" and type(syn.saveinstance) == "function" and syn.saveinstance)
-
     setStatus("Calling saveinstance...", Color3.fromRGB(100, 200, 255))
 
-    if saveFn then
-        local ok, err = pcall(saveFn, {
-            SaveTerrain = saveOpts.SaveTerrain,
-            StreamOnly = saveOpts.StreamOnly,
-            Scripts = saveOpts.Scripts,
-            RemoveDefaultTags = saveOpts.RemoveDefaultTags,
-            RemoveCollision = saveOpts.RemoveCollision,
-            Compress = saveOpts.Compress
-        })
+    local fn = saveinstance or synsaveinstance
+    if not fn then fn = _G.saveinstance or _G.synsaveinstance end
+    if not fn and type(syn) == "table" then fn = syn.saveinstance end
+    if not fn then fn = function() error("No save function available in this executor") end end
 
-        if ok then
-            completed = true
-            setStatus("Done! File saved as " .. fileName, Color3.fromRGB(60, 220, 80))
-            startBtn.Text = "✕  CLOSE"
-        else
-            setStatus("Error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
-        end
+    local ok, err = pcall(fn, {
+        SaveTerrain = saveOpts.SaveTerrain,
+        StreamOnly = saveOpts.StreamOnly,
+        Scripts = saveOpts.Scripts,
+        RemoveDefaultTags = saveOpts.RemoveDefaultTags,
+        RemoveCollision = saveOpts.RemoveCollision,
+        Compress = saveOpts.Compress
+    })
+
+    if ok then
+        completed = true
+        setStatus("Done! File saved as " .. fileName, Color3.fromRGB(60, 220, 80))
+        startBtn.Text = "✕  CLOSE"
     else
-        setStatus("saveinstance/synsaveinstance not found", Color3.fromRGB(255, 80, 80))
+        setStatus("Error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
     end
 end
 
