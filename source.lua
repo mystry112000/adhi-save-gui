@@ -26,7 +26,7 @@ local parent = (type(syn) == "table" and type(syn.protect_gui) == "function" and
             or game:GetService("CoreGui")
 gui.Parent = parent
 
-local W, H = 380, 560
+local W, H = 380, 460
 
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, W, 0, H)
@@ -203,27 +203,23 @@ end
 
 -- Options
 local optFrame = Instance.new("ScrollingFrame")
-optFrame.Size = UDim2.new(1, 0, 0, 310)
+optFrame.Size = UDim2.new(1, 0, 0, 168)
 optFrame.Position = UDim2.new(0, 0, 0, 55)
 optFrame.BackgroundTransparency = 1
 optFrame.BorderSizePixel = 0
 optFrame.ScrollBarThickness = 3
 optFrame.ScrollBarImageColor3 = ACCENT
-optFrame.CanvasSize = UDim2.new(0, 0, 0, 340)
 optFrame.Parent = main
 
 local opts = {}
 local yy = 6
-opts.SaveTerrain = makeToggle(optFrame, yy, "Save Terrain", "Export terrain voxels & material data", true); yy = yy + 54
 opts.Scripts = makeToggle(optFrame, yy, "Decompile Scripts", "Save decompiled Lua source", true); yy = yy + 54
-opts.StreamOnly = makeToggle(optFrame, yy, "Stream Only", "Only save streamed-in parts", false); yy = yy + 54
-opts.Compress = makeToggle(optFrame, yy, "Compress Output", "Compress the final .rbxmx file", true); yy = yy + 54
-opts.RemoveDefaultTags = makeToggle(optFrame, yy, "Remove Default Tags", "Strip default Roblox tags", true); yy = yy + 54
-opts.RemoveCollision = makeToggle(optFrame, yy, "Remove Collision", "Skip collision data (smaller file)", false); yy = yy + 54
+opts.NilInstances = makeToggle(optFrame, yy, "Save Nil Instances", "Include orphaned instances", true); yy = yy + 54
+opts.RemovePlayers = makeToggle(optFrame, yy, "Strip Players", "Remove player characters/objects", true); yy = yy + 54
 
 optFrame.CanvasSize = UDim2.new(0, 0, 0, yy + 6)
 
-local yy2 = 370
+local yy2 = 55 + optFrame.Size.Y.Offset + 12
 
 -- Function name input
 local fnFrame = Instance.new("Frame")
@@ -308,7 +304,7 @@ fic2.Parent = fileInput
 -- Status bar
 local stFrame = Instance.new("Frame")
 stFrame.Size = UDim2.new(1, -16, 0, 50)
-stFrame.Position = UDim2.new(0, 8, 0, 444)
+stFrame.Position = UDim2.new(0, 8, 0, yy2 + 74)
 stFrame.BackgroundColor3 = BG_CARD
 stFrame.BorderSizePixel = 0
 stFrame.Parent = main
@@ -349,7 +345,7 @@ end
 -- Start button
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -16, 0, 44)
-startBtn.Position = UDim2.new(0, 8, 0, 500)
+startBtn.Position = UDim2.new(0, 8, 0, yy2 + 130)
 startBtn.BackgroundColor3 = ACCENT
 startBtn.Text = "▶  START SAVING"
 startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -386,104 +382,8 @@ local function animateDots()
 end
 
 local function doSave()
-    local saveOpts = {
-        SaveTerrain = opts.SaveTerrain(),
-        StreamOnly = opts.StreamOnly(),
-        Scripts = opts.Scripts(),
-        Compress = opts.Compress(),
-        RemoveDefaultTags = opts.RemoveDefaultTags(),
-        RemoveCollision = opts.RemoveCollision()
-    }
-
     local fileName = fileInput.Text
     if fileName == "" then fileName = "SavedMap.rbxmx" end
-
-    pcall(function()
-        local backup = Instance.new("Model")
-        backup.Name = "__VisualBackup"
-        pcall(function() backup.Parent = game:GetService("CoreGui") end)
-
-        local lighting = game:GetService("Lighting")
-        local ld = Instance.new("Folder")
-        ld.Name = "LightingData"
-        for _, prop in ipairs({
-            "Ambient", "Brightness", "ColorShift_Bottom", "ColorShift_Top",
-            "ExposureCompensation", "FogColor", "FogEnd", "FogStart",
-            "GlobalShadows", "OutdoorAmbient", "Outlines",
-            "ShadowSoftness", "Technology", "TimeOfDay",
-            "ClockTime", "GeographicLatitude", "EnvironmentDiffuseScale",
-            "EnvironmentSpecularScale"
-        }) do
-            local v = Instance.new("StringValue")
-            v.Name = prop
-            pcall(function() v.Value = tostring(lighting[prop]) end)
-            v.Parent = ld
-        end
-        for _, child in ipairs(lighting:GetChildren()) do
-            if child:IsA("PostEffect") or child:IsA("Sky") or child:IsA("Atmosphere") then
-                local c = child:Clone()
-                c.Parent = ld
-            end
-        end
-        ld.Parent = backup
-
-        local terrain = workspace.Terrain
-        if terrain and saveOpts.SaveTerrain then
-            local td = Instance.new("Folder")
-            td.Name = "TerrainVisuals"
-            for _, prop in ipairs({
-                "Appearance", "Decoration", "WaterColor", "WaterReflectance",
-                "WaterTransparency", "WaterWaveSize", "WaterWaveSpeed"
-            }) do
-                local v = Instance.new("StringValue")
-                v.Name = prop
-                pcall(function() v.Value = tostring(terrain[prop]) end)
-                v.Parent = td
-            end
-            pcall(function()
-                local matArray = terrain:ReadVoxels(
-                    Region3int16.new(Vector3int16.new(-256, 0, -256), Vector3int16.new(256, 64, 256)),
-                    4
-                )
-                if matArray then
-                    local cv = Instance.new("StringValue")
-                    cv.Name = "MaterialColorsPalette"
-                    cv.Value = http:JSONEncode({terrain.MaterialColors})
-                    cv.Parent = td
-                end
-            end)
-            td.Parent = backup
-        end
-
-        local wd = Instance.new("Folder")
-        wd.Name = "WorkspaceVisuals"
-        for _, prop in ipairs({
-            "CurrentCamera", "DistributedGameTime", "Gravity",
-            "StreamingEnabled", "StreamingMinRadius", "StreamingTargetRadius",
-            "Terrain", "WorldPaused"
-        }) do
-            local v = Instance.new("StringValue")
-            v.Name = prop
-            pcall(function() v.Value = tostring(workspace[prop]) end)
-            v.Parent = wd
-        end
-        wd.Parent = backup
-
-        local camera = workspace.CurrentCamera
-        if camera then
-            local cd = Instance.new("Folder")
-            cd.Name = "CameraData"
-            for _, prop in ipairs({
-                "FieldOfView", "CameraType", "CameraSubject", "HeadScale"
-            }) do
-                local v = Instance.new("StringValue")
-                v.Name = prop
-                pcall(function() v.Value = tostring(camera[prop]) end)
-                v.Parent = cd
-            end
-            cd.Parent = backup
-        end
-    end)
 
     local fnName = fnInput.Text
     if fnName == "" then fnName = "synsaveinstance" end
@@ -504,20 +404,19 @@ local function doSave()
         return
     end
 
-    setStatus("Calling " .. fnName .. "...", Color3.fromRGB(100, 200, 255))
+    setStatus("Saving to " .. fileName .. "...", Color3.fromRGB(100, 200, 255))
 
     local ok, err = pcall(fn, {
-        SaveTerrain = saveOpts.SaveTerrain,
-        StreamOnly = saveOpts.StreamOnly,
-        Scripts = saveOpts.Scripts,
-        RemoveDefaultTags = saveOpts.RemoveDefaultTags,
-        RemoveCollision = saveOpts.RemoveCollision,
-        Compress = saveOpts.Compress
+        FilePath = fileName,
+        NilInstances = opts.NilInstances(),
+        RemovePlayerCharacters = opts.RemovePlayers(),
+        ShowStatus = false,
+        Decompile = opts.Scripts()
     })
 
     if ok then
         completed = true
-        setStatus("Done! File saved as " .. fileName, Color3.fromRGB(60, 220, 80))
+        setStatus("Done! Saved as " .. fileName, Color3.fromRGB(60, 220, 80))
         startBtn.Text = "✕  CLOSE"
     else
         setStatus("Error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
