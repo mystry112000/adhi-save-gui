@@ -343,19 +343,7 @@ local function animateDots()
     end
 end
 
-startBtn.MouseButton1Click:Connect(function()
-    if completed then gui:Destroy() return end
-    if running then return end
-
-    if type(saveinstance) ~= "function" then
-        setStatus(" Error: saveinstance not found in this executor", Color3.fromRGB(255, 80, 80))
-        return
-    end
-
-    running = true
-    startBtn.Text = "⏳  SAVING..."
-    task.spawn(animateDots)
-
+local function doSave()
     local saveOpts = {
         SaveTerrain = opts.SaveTerrain(),
         StreamOnly = opts.StreamOnly(),
@@ -368,117 +356,130 @@ startBtn.MouseButton1Click:Connect(function()
     local fileName = fileInput.Text
     if fileName == "" then fileName = "SavedMap.rbxmx" end
 
-    -- Visual backup (Lighting, Terrain paints, Camera, Workspace)
-    local backup = Instance.new("Model")
-    backup.Name = "__VisualBackup"
-    backup.Parent = game:GetService("CoreGui")
+    pcall(function()
+        local backup = Instance.new("Model")
+        backup.Name = "__VisualBackup"
+        pcall(function() backup.Parent = game:GetService("CoreGui") end)
 
-    -- Lighting
-    local lighting = game:GetService("Lighting")
-    local ld = Instance.new("Folder")
-    ld.Name = "LightingData"
-    for _, prop in ipairs({
-        "Ambient", "Brightness", "ColorShift_Bottom", "ColorShift_Top",
-        "ExposureCompensation", "FogColor", "FogEnd", "FogStart",
-        "GlobalShadows", "OutdoorAmbient", "Outlines",
-        "ShadowSoftness", "Technology", "TimeOfDay",
-        "ClockTime", "GeographicLatitude", "EnvironmentDiffuseScale",
-        "EnvironmentSpecularScale"
-    }) do
-        local v = Instance.new("StringValue")
-        v.Name = prop
-        pcall(function() v.Value = tostring(lighting[prop]) end)
-        v.Parent = ld
-    end
-    for _, child in ipairs(lighting:GetChildren()) do
-        if child:IsA("PostEffect") or child:IsA("Sky") or child:IsA("Atmosphere") then
-            local c = child:Clone()
-            c.Parent = ld
-        end
-    end
-    ld.Parent = backup
-
-    -- Terrain visuals
-    local terrain = workspace.Terrain
-    if terrain and saveOpts.SaveTerrain then
-        local td = Instance.new("Folder")
-        td.Name = "TerrainVisuals"
+        local lighting = game:GetService("Lighting")
+        local ld = Instance.new("Folder")
+        ld.Name = "LightingData"
         for _, prop in ipairs({
-            "Appearance", "Decoration", "WaterColor", "WaterReflectance",
-            "WaterTransparency", "WaterWaveSize", "WaterWaveSpeed"
+            "Ambient", "Brightness", "ColorShift_Bottom", "ColorShift_Top",
+            "ExposureCompensation", "FogColor", "FogEnd", "FogStart",
+            "GlobalShadows", "OutdoorAmbient", "Outlines",
+            "ShadowSoftness", "Technology", "TimeOfDay",
+            "ClockTime", "GeographicLatitude", "EnvironmentDiffuseScale",
+            "EnvironmentSpecularScale"
         }) do
             local v = Instance.new("StringValue")
             v.Name = prop
-            pcall(function() v.Value = tostring(terrain[prop]) end)
-            v.Parent = td
+            pcall(function() v.Value = tostring(lighting[prop]) end)
+            v.Parent = ld
         end
-        local okRead, matArray = pcall(function()
-            return terrain:ReadVoxels(
-                Region3int16.new(Vector3int16.new(-256, 0, -256), Vector3int16.new(256, 64, 256)),
-                4
-            )
-        end)
-        if okRead then
-            local cv = Instance.new("StringValue")
-            cv.Name = "MaterialColorsPalette"
-            cv.Value = http:JSONEncode({terrain.MaterialColors})
-            cv.Parent = td
+        for _, child in ipairs(lighting:GetChildren()) do
+            if child:IsA("PostEffect") or child:IsA("Sky") or child:IsA("Atmosphere") then
+                local c = child:Clone()
+                c.Parent = ld
+            end
         end
-        td.Parent = backup
-    end
+        ld.Parent = backup
 
-    -- Workspace settings
-    local wd = Instance.new("Folder")
-    wd.Name = "WorkspaceVisuals"
-    for _, prop in ipairs({
-        "CurrentCamera", "DistributedGameTime", "Gravity",
-        "StreamingEnabled", "StreamingMinRadius", "StreamingTargetRadius",
-        "Terrain", "WorldPaused"
-    }) do
-        local v = Instance.new("StringValue")
-        v.Name = prop
-        pcall(function() v.Value = tostring(workspace[prop]) end)
-        v.Parent = wd
-    end
-    wd.Parent = backup
+        local terrain = workspace.Terrain
+        if terrain and saveOpts.SaveTerrain then
+            local td = Instance.new("Folder")
+            td.Name = "TerrainVisuals"
+            for _, prop in ipairs({
+                "Appearance", "Decoration", "WaterColor", "WaterReflectance",
+                "WaterTransparency", "WaterWaveSize", "WaterWaveSpeed"
+            }) do
+                local v = Instance.new("StringValue")
+                v.Name = prop
+                pcall(function() v.Value = tostring(terrain[prop]) end)
+                v.Parent = td
+            end
+            pcall(function()
+                local matArray = terrain:ReadVoxels(
+                    Region3int16.new(Vector3int16.new(-256, 0, -256), Vector3int16.new(256, 64, 256)),
+                    4
+                )
+                if matArray then
+                    local cv = Instance.new("StringValue")
+                    cv.Name = "MaterialColorsPalette"
+                    cv.Value = http:JSONEncode({terrain.MaterialColors})
+                    cv.Parent = td
+                end
+            end)
+            td.Parent = backup
+        end
 
-    -- Camera
-    local camera = workspace.CurrentCamera
-    if camera then
-        local cd = Instance.new("Folder")
-        cd.Name = "CameraData"
+        local wd = Instance.new("Folder")
+        wd.Name = "WorkspaceVisuals"
         for _, prop in ipairs({
-            "FieldOfView", "CameraType", "CameraSubject", "HeadScale"
+            "CurrentCamera", "DistributedGameTime", "Gravity",
+            "StreamingEnabled", "StreamingMinRadius", "StreamingTargetRadius",
+            "Terrain", "WorldPaused"
         }) do
             local v = Instance.new("StringValue")
             v.Name = prop
-            pcall(function() v.Value = tostring(camera[prop]) end)
-            v.Parent = cd
+            pcall(function() v.Value = tostring(workspace[prop]) end)
+            v.Parent = wd
         end
-        cd.Parent = backup
-    end
+        wd.Parent = backup
+
+        local camera = workspace.CurrentCamera
+        if camera then
+            local cd = Instance.new("Folder")
+            cd.Name = "CameraData"
+            for _, prop in ipairs({
+                "FieldOfView", "CameraType", "CameraSubject", "HeadScale"
+            }) do
+                local v = Instance.new("StringValue")
+                v.Name = prop
+                pcall(function() v.Value = tostring(camera[prop]) end)
+                v.Parent = cd
+            end
+            cd.Parent = backup
+        end
+    end)
 
     setStatus("Calling saveinstance...", Color3.fromRGB(100, 200, 255))
 
-    -- Run saveinstance
-    local ok, err = pcall(saveinstance, {
-        SaveTerrain = saveOpts.SaveTerrain,
-        StreamOnly = saveOpts.StreamOnly,
-        Scripts = saveOpts.Scripts,
-        RemoveDefaultTags = saveOpts.RemoveDefaultTags,
-        RemoveCollision = saveOpts.RemoveCollision,
-        Compress = saveOpts.Compress
-    })
+    if type(saveinstance) == "function" then
+        local ok, err = pcall(saveinstance, {
+            SaveTerrain = saveOpts.SaveTerrain,
+            StreamOnly = saveOpts.StreamOnly,
+            Scripts = saveOpts.Scripts,
+            RemoveDefaultTags = saveOpts.RemoveDefaultTags,
+            RemoveCollision = saveOpts.RemoveCollision,
+            Compress = saveOpts.Compress
+        })
 
-    backup:Destroy()
-    running = false
-
-    if ok then
-        completed = true
-        setStatus(" Done! File saved as " .. fileName, Color3.fromRGB(60, 220, 80))
-        startBtn.Text = "✕  CLOSE"
+        if ok then
+            completed = true
+            setStatus("Done! File saved as " .. fileName, Color3.fromRGB(60, 220, 80))
+            startBtn.Text = "✕  CLOSE"
+        else
+            setStatus("Error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
+        end
     else
-        setStatus(" Error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
+        setStatus("saveinstance not found in this executor", Color3.fromRGB(255, 80, 80))
+    end
+end
+
+startBtn.MouseButton1Click:Connect(function()
+    if completed then gui:Destroy() return end
+    if running then return end
+
+    running = true
+    startBtn.Text = "⏳  SAVING..."
+    task.spawn(animateDots)
+
+    local ok, err = pcall(doSave)
+
+    running = false
+    if not ok then
+        setStatus("Internal error: " .. tostring(err), Color3.fromRGB(255, 80, 80))
         startBtn.Text = "▶  START SAVING"
     end
 end)
