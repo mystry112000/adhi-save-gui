@@ -4,10 +4,16 @@ A feature-rich Roblox Save Instance wrapper with a modern draggable GUI. Save en
 
 ## Loader
 
-Paste this in your executor:
+Paste in your executor:
 
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/mystry112000/adhi-save-gui/main/save_gui.lua"))()
+```
+
+### Fallback (readable source, if minified version errors):
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/mystry112000/adhi-save-gui/main/source.lua"))()
 ```
 
 ## Features
