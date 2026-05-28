@@ -494,13 +494,13 @@ local function doSave()
         local okLoad, result = pcall(function()
             return loadstring(game:HttpGet("https://raw.githubusercontent.com/mystry112000/adhi-save-gui/main/save.lua"))()
         end)
-        if okLoad then
-            fn = _G[fnName] or (getfenv and getfenv()[fnName])
+        if okLoad and type(result) == "function" then
+            fn = result
         end
     end
 
-    if not fn then
-        setStatus("'" .. fnName .. "' not found in executor", Color3.fromRGB(255, 80, 80))
+    if type(fn) ~= "function" then
+        setStatus("Save function not available", Color3.fromRGB(255, 80, 80))
         return
     end
 
