@@ -1,4 +1,4 @@
-# ADHI SAVE GUI
+# MYSTERY SAVE GUI
 
 A feature-rich Roblox Save Instance wrapper with a modern draggable GUI. Save entire games including terrain, lighting, camera settings, and decompiled scripts into `.rbxmx` files that open directly in Roblox Studio.
 
@@ -12,7 +12,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/mystry112000/adhi-sav
 
 ## Features
 
-- Modern dark theme GUI with brand accent
+- Modern dark theme GUI with MYSTERY brand accent
 - Draggable window
 - 6 toggleable options
 - Custom filename input
@@ -72,7 +72,7 @@ By using this script you acknowledge that:
 ## Credits
 
 - Adament_Knight_07 — Original saveinstance implementation
-- ADHI — GUI wrapper and enhancements
+- MYSTERY — GUI wrapper and enhancements
 - OpenCode — Development assistance
 
 ## License
