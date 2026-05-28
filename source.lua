@@ -486,11 +486,21 @@ local function doSave()
     end)
 
     local fnName = fnInput.Text
-    if fnName == "" then fnName = "saveinstance" end
+    if fnName == "" then fnName = "synsaveinstance" end
     local fn = _G[fnName] or (getfenv and getfenv()[fnName])
 
     if not fn then
-        setStatus("'" .. fnName .. "' not found (try differnt name)", Color3.fromRGB(255, 80, 80))
+        setStatus("Loading save engine...", Color3.fromRGB(255, 200, 60))
+        local okLoad, result = pcall(function()
+            return loadstring(game:HttpGet("https://raw.githubusercontent.com/mystry112000/adhi-save-gui/main/save.lua"))()
+        end)
+        if okLoad then
+            fn = _G[fnName] or (getfenv and getfenv()[fnName])
+        end
+    end
+
+    if not fn then
+        setStatus("'" .. fnName .. "' not found in executor", Color3.fromRGB(255, 80, 80))
         return
     end
 
