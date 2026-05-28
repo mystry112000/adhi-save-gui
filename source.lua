@@ -487,10 +487,10 @@ local function doSave()
 
     local fnName = fnInput.Text
     if fnName == "" then fnName = "saveinstance" end
-    local fn = _G[fnName]
+    local fn = _G[fnName] or (getfenv and getfenv()[fnName])
 
     if not fn then
-        setStatus("Function '" .. fnName .. "' not found in _G", Color3.fromRGB(255, 80, 80))
+        setStatus("'" .. fnName .. "' not found (try differnt name)", Color3.fromRGB(255, 80, 80))
         return
     end
 
