@@ -36,6 +36,11 @@ local function to_base64(data)
 	local padding = (#data % 3 == 1 and '==') or (#data % 3 == 2 and '=' or '')
 	return table.concat(result) .. padding
 end
+local realcheck = true
+if string.find(identifyexecutor(), "Solara") then realcheck = false end
+
+getgenv().gethiddenpropertygethiddenproperty = gethiddenproperty
+
 local function string_find(s, pattern)
 	return string.find(s, pattern, nil, true)
 end
@@ -2432,6 +2437,15 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 		end
 
 		local itemstring = '<Item class="' .. className .. '" referent="' .. ref .. '"><Properties>'
+		if className == "Terrain" and realcheck then
+			writefile("SmoothGrid.txt", gethiddenpropertygethiddenproperty(workspace.Terrain, "SmoothGrid"))
+			writefile("PhysicsGrid.txt", gethiddenpropertygethiddenproperty(workspace.Terrain, "PhysicsGrid"))
+			local physicsgrid = to_base64(readfile("PhysicsGrid.txt"))
+			local smoothgrid = to_base64(readfile("SmoothGrid.txt"))
+			itemstring = itemstring ..
+				'<BinaryString name="PhysicsGrid"><![CDATA[' .. physicsgrid .. ']]></BinaryString>' ..
+				'<BinaryString name="SmoothGrid"><![CDATA[' .. smoothgrid .. ']]></BinaryString>'
+		end
 		return itemstring
 	end
 
@@ -2988,9 +3002,6 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 						RecoveredScripts
 						) .. "\n" or "")
 					.. [[
-
-		-- Made by Adament_Knight_07 https://discord.gg/9F7sxKb7
-
 		If you didn't save in Binary (rbxl) - it's recommended to save the game right away to take advantage of the binary format & to preserve values of certain properties if you used IgnoreDefaultProperties setting (as they might change in the future).
 		You can do that by going to FILE -> Save to File As -> Make sure File Name ends with .rbxl -> Save
 
