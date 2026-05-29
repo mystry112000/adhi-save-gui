@@ -1,3 +1,6 @@
+--!native
+--!optimize 2
+--!divine-intellect
 -- Adament_Knight_07 https://discord.gg/9F7sxKb7
 --[[local exec = identifyexecutor()
 if not (string.find(exec, "Fluxus") or string.find(exec, "Swift")) then
@@ -2985,6 +2988,9 @@ local function synsaveinstance(CustomOptions, CustomOptions2)
 						RecoveredScripts
 						) .. "\n" or "")
 					.. [[
+
+		-- Made by Adament_Knight_07 https://discord.gg/9F7sxKb7
+
 		If you didn't save in Binary (rbxl) - it's recommended to save the game right away to take advantage of the binary format & to preserve values of certain properties if you used IgnoreDefaultProperties setting (as they might change in the future).
 		You can do that by going to FILE -> Save to File As -> Make sure File Name ends with .rbxl -> Save
 
